@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEEP FRYER</title>
+    <style>
+        :root {
+            --bg-color: #0d0814;
+            --card-bg: #150f22;
+            --text-main: #ffffff;
+            --text-muted: #8e879a;
+            --accent-yellow: #a4a61d;
+            --accent-yellow-hover: #c2c426;
+            --btn-bg: #1e1632;
+            --btn-hover: #2b2046;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        header {
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Visualizer Panel */
+        .visualizer-container {
+            width: 100%;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            border: 1px solid #231a38;
+        }
+
+        .status-text {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 40px;
+            display: block;
+            border-radius: 4px;
+        }
+
+        /* The Big Fry Button */
+        .fry-circle {
+            width: 180px;
+            height: 180px;
+            background-color: var(--accent-yellow);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            border: none;
+            color: #000000;
+            margin: 10px 0;
+        }
+
+        .fry-circle:hover {
+            background-color: var(--accent-yellow-hover);
+        }
+
+        .fry-circle:active {
+            transform: scale(0.96);
+        }
+
+        .fry-circle h2 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        .fry-circle span {
+            font-size: 1rem;
+            font-weight: bold;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .prompt-text {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Action Controls Layout */
+        .grid-container {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            background-color: var(--btn-bg);
+            color: var(--text-main);
+            border: 1px solid #2a1f44;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: var(--btn-hover);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn-save {
+            background-color: var(--accent-yellow);
+            color: #000000;
+            border: none;
+            grid-column: span 1;
+        }
+
+        .btn-save:hover:not(:disabled) {
+            background-color: var(--accent-yellow-hover);
+        }
+
+        /* Invisible Native Upload */
+        #file-input {
+            display: none;
+        }
+
+        /* Warning Footer */
+        footer {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>DEEP FRYER</h1>
+            <p>Upload it. Burn it. Download it.</p>
+        </header>
+
+        <!-- Visualizer & Equalizer Display -->
+        <div class="visualizer-container">
+            <div class="status-text" id="status-display">NO SOUND LOADED</div>
+            <canvas id="visualizer-canvas"></canvas>
+        </div>
+
+        <!-- Central Fry Action -->
+        <button class="fry-circle" id="fry-trigger" disabled>
+            <h2>FRY</h2>
+            <span>90%</span>
+        </button>
+        <div class="prompt-text" id="prompt-display">LOAD A SOUND FIRST</div>
+
+        <!-- Controls Console -->
+        <div class="grid-container">
+            <label for="file-input" class="btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload
+            </label>
+            <input type="file" id="file-input" accept="audio/*">
+
+            <button class="btn" id="record-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                Record
+            </button>
+
+            <button class="btn" id="play-btn" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Play
+            </button>
+
+            <button class="btn btn-save" id="save-btn" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Save WAV
+            </button>
+        </div>
+
+        <footer>
+            <p>Dont use it with headphones</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('file-input');
+        const statusDisplay = document.getElementById('status-display');
+        const promptDisplay = document.getElementById('prompt-display');
+        const fryTrigger = document.getElementById('fry-trigger');
+        const playBtn = document.getElementById('play-btn');
+        const recordBtn = document.getElementById('record-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const canvas = document.getElementById('visualizer-canvas');
+        const canvasCtx = canvas.getContext('2d');
+
+        // Audio State variables
+        let originalAudioBuffer = null;
+        let friedAudioBuffer = null;
+        let currentAudioSource = null;
+        let isPlaying = false;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+
+        // Web Audio API context for runtime visualizer playback
+        let liveAudioCtx = null;
+        let analyserNode = null;
+
+        // Initialize Canvas Sizing
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            drawPlaceholderVisualizer();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        // Draw static retro spectrum layout when idle
+        function drawPlaceholderVisualizer() {
+            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+            const totalBars = 36;
+            const barWidth = Math.floor(canvas.width / totalBars) - 2;
+            const colors = ['#00E5FF', '#FF007F', '#FFFF00', '#9D00FF', '#FF6C00', '#00FF66'];
+            
+            for (let i = 0; i < totalBars; i++) {
+                const x = i * (barWidth + 2);
+                const barHeight = Math.floor(Math.random() * 12) + 6;
+                canvasCtx.fillStyle = colors[i % colors.length];
+                canvasCtx.fillRect(x, (canvas.height - barHeight)/2, barWidth, barHeight);
+            }
+        }
+
+        // Live Equalizer Visualizer Renderer
+        function renderAnimationLoop() {
+            if (!isPlaying || !analyserNode) return;
+            requestAnimationFrame(renderAnimationLoop);
+
+            const bufferLength = analyserNode.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyserNode.getByteFrequencyData(dataArray);
+
+            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const totalBars = 40;
+            const barWidth = Math.floor(canvas.width / totalBars) - 2;
+            const colors = ['#00E5FF', '#FF007F', '#FFFF00', '#9D00FF', '#FF6C00', '#00FF66'];
+
+            for (let i = 0; i < totalBars; i++) {
+                const dataIndex = Math.floor((i / totalBars) * bufferLength);
+                let value = dataArray[dataIndex] / 255;
+                let barHeight = (value * canvas.height) * 1.2;
+                if(barHeight < 6) barHeight = 6; // Keep block thickness minimum
+
+                const x = i * (barWidth + 2);
+                const y = (canvas.height - barHeight) / 2;
+
+                canvasCtx.fillStyle = colors[i % colors.length];
+                canvasCtx.fillRect(x, y, barWidth, barHeight);
+            }
+        }
+
+        // Load and decode files cleanly
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            statusDisplay.textContent = file.name.toUpperCase();
+            promptDisplay.textContent = "READY TO BURN";
+            fryTrigger.disabled = false;
+            
+            const arrayBuffer = await file.arrayBuffer();
+            const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+            originalAudioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+            tempCtx.close();
+        });
+
+        // Microphone Recording Feature
+        recordBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                recordedChunks = [];
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                        const arrayBuffer = await blob.arrayBuffer();
+                        const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        originalAudioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+                        tempCtx.close();
+
+                        statusDisplay.textContent = "RECORDED AUDIO AUDIO.WAV";
+                        promptDisplay.textContent = "READY TO BURN";
+                        fryTrigger.disabled = false;
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="red" stroke="red"><circle cx="12" cy="12" r="10"/></svg> Stop`;
+                    statusDisplay.textContent = "RECORDING LIVE AUDIO...";
+                } catch (err) {
+                    alert("Microphone access denied or unavailable.");
+                }
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                recordBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg> Record`;
+            }
+        });
+
+        // Hard-Core Deepfrying processing logic inside an OfflineAudioContext
+        fryTrigger.addEventListener('click', async () => {
+            if (!originalAudioBuffer) return;
+
+            promptDisplay.textContent = "FRYING AUDIO CHIPS...";
+            statusDisplay.textContent = "DEEP FRYER: BURNING AT 90%";
+
+            const duration = originalAudioBuffer.duration;
+            const sampleRate = originalAudioBuffer.sampleRate;
+            
+            const offlineCtx = new OfflineAudioContext(
+                originalAudioBuffer.numberOfChannels,
+                duration * sampleRate,
+                sampleRate
+            );
+
+            const bufferSource = offlineCtx.createBufferSource();
+            bufferSource.buffer = originalAudioBuffer;
+
+            const bassBlowout = offlineCtx.createBiquadFilter();
+            bassBlowout.type = "lowshelf";
+            bassBlowout.frequency.value = 110;
+            bassBlowout.gain.value = 22; 
+
+            const waveshaper = offlineCtx.createWaveShaper();
+            waveshaper.curve = generateHeavyFryCurve(450); 
+            waveshaper.oversample = "4x";
+
+            const compressionLimiter = offlineCtx.createGain();
+            compressionLimiter.gain.value = 0.22; 
+
+            bufferSource.connect(bassBlowout);
+            bassBlowout.connect(waveshaper);
+            waveshaper.connect(compressionLimiter);
+            compressionLimiter.connect(offlineCtx.destination);
+
+            bufferSource.start();
+            
+            friedAudioBuffer = await offlineCtx.startRendering();
+
+            promptDisplay.textContent = "COOKED CRISPY!";
+            playBtn.disabled = false;
+            saveBtn.disabled = false;
+        });
+
+        playBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                stopPlayback();
+            } else {
+                startPlayback();
+            }
+        });
+
+        function startPlayback() {
+            const activeBuffer = friedAudioBuffer || originalAudioBuffer;
+            if (!activeBuffer) return;
+
+            liveAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            currentAudioSource = liveAudioCtx.createBufferSource();
+            currentAudioSource.buffer = activeBuffer;
+
+            analyserNode = liveAudioCtx.createAnalyser();
+            analyserNode.fftSize = 128;
+
+            currentAudioSource.connect(analyserNode);
+            analyserNode.connect(liveAudioCtx.destination);
+
+            currentAudioSource.onended = () => stopPlayback();
+            
+            currentAudioSource.start();
+            isPlaying = true;
+            playBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg> Stop`;
+            renderAnimationLoop();
+        }
+
+        function stopPlayback() {
+            if (currentAudioSource) {
+                try { currentAudioSource.stop(); } catch(e){}
+                currentAudioSource.disconnect();
+            }
+            if (liveAudioCtx) {
+                liveAudioCtx.close();
+            }
+            isPlaying = false;
+            playBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Play`;
+            drawPlaceholderVisualizer();
+        }
+
+        saveBtn.addEventListener('click', () => {
+            if (!friedAudioBuffer) return;
+            const wavBlob = audioBufferToWav(friedAudioBuffer);
+            const downloadUrl = URL.createObjectURL(wavBlob);
+            
+            const anchor = document.createElement('a');
+            anchor.href = downloadUrl;
+            anchor.download = 'deep_fried_sound.wav';
+            anchor.click();
+            URL.revokeObjectURL(downloadUrl);
+        });
+
+        function generateHeavyFryCurve(amount) {
+            const samples = 44100;
+            const curve = new Float32Array(samples);
+            const deg = Math.PI / 180;
+            for (let i = 0; i < samples; ++i) {
+                const x = (i * 2) / samples - 1;
+                curve[i] = ((3 + amount) * x * 22 * deg) / (Math.PI + amount * Math.abs(x));
+            }
+            return curve;
+        }
+
+        function audioBufferToWav(buffer) {
+            let numChannels = buffer.numberOfChannels,
+                sampleRate = buffer.sampleRate,
+                format = 1, 
+                bitDepth = 16,
+                resultIndex = 0,
+                inputOffset = 0;
+
+            let resultBuffer = new ArrayBuffer(44 + buffer.length * numChannels * 2);
+            let view = new DataView(resultBuffer);
+
+            writeString('RIFF'); view.setUint32(4, 36 + buffer.length * numChannels * 2, true);
+            writeString('WAVE'); writeString('fmt '); view.setUint32(16, 16, true);
+            view.setUint16(20, format, true); view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
+            view.setUint16(32, numChannels * (bitDepth / 8), true); view.setUint16(34, bitDepth, true);
+            writeString('data'); view.setUint32(40, buffer.length * numChannels * 2, true);
+
+            let channels = [];
+            for (let i = 0; i < numChannels; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            resultIndex = 44;
+            while (inputOffset < buffer.length) {
+                for (let i = 0; i < numChannels; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][inputOffset]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(resultIndex, sample, true);
+                    resultIndex += 2;
+                }
+                inputOffset++;
+            }
+
+            return new Blob([resultBuffer], { type: 'audio/wav' });
+
+            function writeString(str) {
+                for (let i = 0; i < str.length; i++) {
+                    view.setUint8(resultIndex + i, str.charCodeAt(i));
+                }
+                resultIndex += str.length;
+            }
+        }
+    </script>
+</body>
+</html>

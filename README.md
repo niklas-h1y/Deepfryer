@@ -4,7 +4,7 @@
 
 Deepfryer is a lightweight, frontend-driven web application built with vanilla HTML, CSS, and the native browser **Web Audio API**. It allows users to upload or record audio clips and instantly blast them with a massive 90% hard-clipping distortion and sub-bass blowout—replicating the classic, crushed "deep-fried" meme aesthetic directly in the browser.
 
-🔗 **Live Demo:** [niklas-h1y.github.io/Deepfryer/](https://github.io)
+🔗 **Live Demo:** [niklas-h1y.github.io/Deepfryer/](https://niklas-h1y.github.io/Deepfryer/)
 
 ---
 
@@ -35,4 +35,4 @@ Deepfryer is a lightweight, frontend-driven web application built with vanilla H
 
 ## 👤 Author
 
-* **Niklas** - [@niklas-h1y](https://github.com)
+* **Niklas** - [@niklas-h1y](https://github.com/niklas-h1y)

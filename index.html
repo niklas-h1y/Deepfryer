@@ -406,7 +406,7 @@
             waveshaper.oversample = "4x";
 
             const compressionLimiter = offlineCtx.createGain();
-            compressionLimiter.gain.value = 0.22; 
+            compressionLimiter.gain.value = 1; 
 
             bufferSource.connect(bassBlowout);
             bassBlowout.connect(waveshaper);
